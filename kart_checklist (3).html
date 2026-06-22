@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nipo Import — Sistema de Karts</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  :root {
+    --bg: #f5f5f3;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.1);
+    --border-med: rgba(0,0,0,0.18);
+    --text: #1a1a18;
+    --text-sec: #6b6b68;
+    --text-ter: #9a9a96;
+    --blue: #185FA5;
+    --blue-bg: #E6F1FB;
+    --blue-text: #0C447C;
+    --green: #3B6D11;
+    --green-bg: #EAF3DE;
+    --green-text: #27500A;
+    --red: #993C1D;
+    --red-bg: #FAECE7;
+    --red-text: #711713;
+    --amber: #854F0B;
+    --amber-bg: #FAEEDA;
+    --amber-text: #633806;
+    --gray-bg: #F1EFE8;
+    --gray-text: #444441;
+    --radius: 10px;
+    --radius-sm: 7px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
+
+  /* ── NAV ── */
+  .app-nav { display: flex; background: var(--surface); border-bottom: 0.5px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .nav-btn { flex: 1; padding: 12px 6px; border: none; background: transparent; font-size: 12px; font-weight: 500; color: var(--text-sec); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; }
+  .nav-btn i { font-size: 18px; }
+  .nav-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  /* ── SCREENS ── */
+  .screen { display: none; max-width: 480px; margin: 0 auto; padding-bottom: 24px; }
+  .screen.active { display: block; }
+
+  /* ── TV SCREEN (full width dark) ── */
+  #screen-tv { max-width: 100%; background: #0d0f14; min-height: calc(100vh - 49px); padding: 0; }
+  #screen-tv.active { display: block; }
+
+  /* ── CARDS ── */
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); margin: 12px 16px; overflow: hidden; }
+  .card-pad { padding: 14px; }
+
+  /* ── SECTION LABEL ── */
+  .sec-label { font-size: 11px; font-weight: 600; color: var(--text-ter); text-transform: uppercase; letter-spacing: .06em; padding: 14px 16px 6px; }
+
+  /* ── HEADER ── */
+  .page-header { padding: 16px 16px 12px; background: var(--surface); border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .page-header h1 { font-size: 16px; font-weight: 600; }
+  .page-header p { font-size: 12px; color: var(--text-sec); margin-top: 2px; }
+
+  /* ── PROGRESS BAR (técnico) ── */
+  .progress-bar { display: flex; align-items: center; padding: 12px 16px; background: var(--surface); border-bottom: 0.5px solid var(--border); gap: 6px; }
+  .prog-dot { width: 26px; height: 26px; border-radius: 50%; border: 0.5px solid var(--border-med); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--text-sec); background: var(--surface); flex-shrink: 0; transition: all .2s; }
+  .prog-dot.active { background: var(--blue-bg); border-color: var(--blue); color: var(--blue-text); }
+  .prog-dot.done { background: var(--green-bg); border-color: var(--green); color: var(--green-text); }
+  .prog-line { flex: 1; height: 0.5px; background: var(--border); }
+  .prog-lbl { font-size: 11px; color: var(--text-sec); margin-left: 4px; }
+
+  /* ── STEPS ── */
+  .step { display: none; }
+  .step.active { display: block; }
+
+  /* ── GRID KARTS ── */
+  .kart-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 4px 0; }
+  .kart-btn { padding: 9px 4px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font-size: 11px; font-weight: 600; cursor: pointer; text-align: center; color: var(--text); transition: all .12s; }
+  .kart-btn.sel { border-color: var(--blue); background: var(--blue-bg); color: var(--blue-text); }
+  .kart-btn.em-manutencao { border-color: var(--red); background: var(--red-bg); color: var(--red-text); cursor: not-allowed; opacity: .6; }
+
+  /* ── TÉCNICOS ── */
+  .tec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tec-btn { padding: 11px 10px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text); transition: all .12s; }
+  .tec-btn.sel { border-color: var(--blue); background: var(--blue-bg); color: var(--blue-text); }
+  .tec-ini { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+
+  /* ── CHECK ITEMS ── */
+  .check-item { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 0.5px solid var(--border); }
+  .check-item:last-child { border-bottom: none; }
+  .tog-grp { display: flex; gap: 5px; }
+  .tog { padding: 7px 13px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); font-size: 12px; cursor: pointer; background: var(--surface); color: var(--text-sec); display: flex; align-items: center; gap: 4px; transition: all .12s; }
+  .tog.ok { background: var(--green-bg); border-color: var(--green); color: var(--green-text); }
+  .tog.rev { background: var(--red-bg); border-color: var(--red); color: var(--red-text); }
+
+  /* ── EMERGÊNCIA ── */
+  .emerg-btn { width: 100%; padding: 13px; border-radius: var(--radius-sm); border: 0.5px solid var(--red); background: var(--red-bg); color: var(--red-text); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+  /* ── TEXTAREA ── */
+  textarea { width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 13px; font-family: inherit; color: var(--text); background: var(--surface); resize: none; outline: none; }
+  textarea:focus { border-color: var(--blue); }
+
+  /* ── SELECT ── */
+  select { width: 100%; padding: 10px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; color: var(--text); background: var(--surface); outline: none; cursor: pointer; }
+
+  /* ── BOTÕES NAVEGAÇÃO ── */
+  .nav-row { display: flex; gap: 8px; padding: 14px 16px; }
+  .btn-sec { flex: 1; padding: 13px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-med); background: var(--surface); font-size: 14px; font-weight: 500; cursor: pointer; color: var(--text); }
+  .btn-pri { flex: 2; padding: 13px; border-radius: var(--radius-sm); border: none; background: var(--blue); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-pri:disabled { background: var(--bg); color: var(--text-ter); cursor: not-allowed; }
+  .btn-full { width: 100%; padding: 13px; border-radius: var(--radius-sm); border: none; background: var(--blue); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+
+  /* ── BADGES ── */
+  .badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 5px; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+  .badge-pend { background: var(--amber-bg); color: var(--amber-text); }
+  .badge-aprov { background: var(--green-bg); color: var(--green-text); }
+  .badge-disp { background: var(--gray-bg); color: var(--gray-text); }
+  .badge-emerg { background: var(--red-bg); color: var(--red-text); }
+  .badge-conc { background: var(--blue-bg); color: var(--blue-text); }
+
+  /* ── STAT CARDS ── */
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px; }
+  .stat { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; }
+  .stat-n { font-size: 26px; font-weight: 600; }
+  .stat-l { font-size: 11px; color: var(--text-sec); margin-top: 2px; }
+
+  /* ── FILTROS ── */
+  .filters { display: flex; gap: 6px; padding: 0 16px 10px; flex-wrap: wrap; }
+  .f-btn { padding: 6px 13px; border-radius: 20px; border: 0.5px solid var(--border); font-size: 12px; cursor: pointer; background: var(--surface); color: var(--text-sec); font-weight: 500; transition: all .12s; }
+  .f-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+  /* ── KART CARD (gestor) ── */
+  .kart-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); margin: 0 16px 10px; overflow: hidden; }
+  .kart-card.emerg { border-color: var(--red); }
+  .kart-card.concluido { opacity: .5; }
+  .kart-top { padding: 12px 14px 10px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .kart-num { font-size: 17px; font-weight: 600; }
+  .kart-meta { font-size: 11px; color: var(--text-sec); margin-top: 2px; }
+  .item-tags { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 14px 10px; }
+  .item-tag { font-size: 11px; padding: 3px 8px; border-radius: 5px; background: var(--amber-bg); color: var(--amber-text); border: 0.5px solid rgba(133,79,11,.2); display: flex; align-items: center; gap: 3px; }
+  .obs-txt { font-size: 12px; color: var(--text-sec); font-style: italic; padding: 0 14px 10px; }
+  .kart-actions { display: grid; grid-template-columns: 1fr 1fr; border-top: 0.5px solid var(--border); }
+  .act-btn { padding: 12px 8px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; background: transparent; color: var(--text-sec); display: flex; align-items: center; justify-content: center; gap: 5px; transition: background .12s; }
+  .act-btn:hover { background: var(--bg); }
+  .act-btn:first-child { border-right: 0.5px solid var(--border); }
+  .act-btn.aprovar { color: var(--green); }
+  .act-btn.dispensar { color: var(--red); }
+  .act-btn.concluir { color: var(--blue); }
+  .act-btn.disabled { opacity: .3; cursor: default; pointer-events: none; }
+  .emerg-strip { background: var(--red-bg); padding: 6px 14px; font-size: 11px; font-weight: 600; color: var(--red-text); display: flex; align-items: center; gap: 5px; border-bottom: 0.5px solid rgba(153,60,29,.15); }
+
+  /* ── TV ── */
+  .tv-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px 14px; border-bottom: 0.5px solid rgba(255,255,255,.08); }
+  .tv-title { font-size: 18px; font-weight: 600; color: #fff; }
+  .tv-sub { font-size: 12px; color: rgba(255,255,255,.4); margin-top: 3px; display: flex; align-items: center; gap: 6px; }
+  .tv-dot { width: 7px; height: 7px; border-radius: 50%; background: #9FE1CB; display: inline-block; animation: blink 1.4s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+  .tv-clock { font-size: 24px; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; }
+  .tv-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px 24px; }
+  .tv-stat { background: rgba(255,255,255,.05); border: 0.5px solid rgba(255,255,255,.08); border-radius: 10px; padding: 12px 16px; }
+  .tv-stat-n { font-size: 28px; font-weight: 600; }
+  .tv-stat-l { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 3px; }
+  .tv-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 24px 24px; }
+  .tv-card { background: rgba(255,255,255,.04); border: 0.5px solid rgba(255,255,255,.08); border-radius: 10px; padding: 14px 16px; }
+  .tv-card.emerg { border-color: #A32D2D; background: rgba(163,45,45,.12); }
+  .tv-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .tv-kart-num { font-size: 20px; font-weight: 600; color: #fff; }
+  .tv-kart-meta { font-size: 11px; color: rgba(255,255,255,.35); margin-top: 2px; }
+  .tv-badge { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 5px; }
+  .tv-badge-emerg { background: rgba(224,75,74,.2); color: #f09595; }
+  .tv-badge-normal { background: rgba(250,199,117,.15); color: #FAC775; }
+  .tv-items { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+  .tv-item { font-size: 11px; padding: 3px 8px; border-radius: 5px; background: rgba(250,199,117,.12); color: #FAC775; border: 0.5px solid rgba(250,199,117,.2); }
+  .tv-obs { font-size: 11px; color: rgba(255,255,255,.3); font-style: italic; }
+  .tv-empty { text-align: center; padding: 60px 24px; color: rgba(255,255,255,.25); font-size: 16px; }
+  .tv-footer { text-align: center; padding: 0 24px 20px; font-size: 11px; color: rgba(255,255,255,.15); }
+
+  /* ── SUCCESS ── */
+  .success-wrap { padding: 32px 16px; text-align: center; }
+  .success-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--green-bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 22px; color: var(--green-text); }
+  .success-icon.emerg { background: var(--red-bg); color: var(--red-text); }
+  .success-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .success-sub { font-size: 13px; color: var(--text-sec); margin-bottom: 20px; line-height: 1.6; }
+  .sum-card { background: var(--bg); border-radius: var(--radius-sm); padding: 12px 14px; text-align: left; margin-bottom: 14px; }
+  .sum-row { display: flex; justify-content: space-between; align-items: flex-start; font-size: 13px; padding: 4px 0; gap: 8px; }
+  .sum-lbl { color: var(--text-sec); flex-shrink: 0; }
+
+  /* ── CONFIRMAR BAR ── */
+  .confirm-bar { padding: 14px 16px; border-top: 0.5px solid var(--border); background: var(--surface); }
+
+  /* ── MODAL EMERGÊNCIA ── */
+  .modal-overlay { display: none; min-height: 300px; background: rgba(0,0,0,.5); align-items: flex-end; justify-content: center; padding: 0; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; padding: 20px 16px 16px; width: 100%; max-width: 480px; }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: var(--red-text); }
+  .modal-sub { font-size: 13px; color: var(--text-sec); margin-bottom: 16px; }
+
+  /* ── EMPTY STATE ── */
+  .empty { padding: 32px 16px; text-align: center; color: var(--text-ter); font-size: 13px; }
+
+  /* ── HINT ── */
+  .hint { font-size: 11px; color: var(--text-ter); padding: 4px 16px 10px; }
+
+  /* ── KART JÁ INSPECIONADO ── */
+  .kart-btn.inspecionado { border-color: var(--green); background: var(--green-bg); color: var(--green-text); cursor: not-allowed; opacity: .55; }
+
+  /* ── TELA DE SENHA ── */
+  .lock-screen { display: none; min-height: calc(100vh - 49px); align-items: center; justify-content: center; background: var(--bg); }
+  .lock-screen.active { display: flex; }
+  .lock-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px 24px 24px; width: 100%; max-width: 320px; margin: 16px; text-align: center; }
+  .lock-icon { width: 52px; height: 52px; border-radius: 50%; background: var(--blue-bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 22px; color: var(--blue-text); }
+  .lock-title { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .lock-sub { font-size: 13px; color: var(--text-sec); margin-bottom: 20px; }
+  .pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--border-med); background: var(--surface); transition: all .15s; }
+  .pin-dot.filled { background: var(--blue); border-color: var(--blue); }
+  .pin-dot.error { background: var(--red); border-color: var(--red); }
+  .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pin-key { padding: 14px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font-size: 18px; font-weight: 500; cursor: pointer; color: var(--text); transition: background .1s; }
+  .pin-key:active { background: var(--bg); }
+  .pin-key.del { font-size: 14px; color: var(--text-sec); }
+  .lock-err { font-size: 12px; color: var(--red-text); margin-top: 12px; min-height: 18px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="app-nav">
+  <button class="nav-btn active" onclick="showScreen('tecnico',this)">
+    <i class="ti ti-clipboard-check"></i>Técnico
+  </button>
+  <button class="nav-btn" onclick="navProtected('gestor',this)">
+    <i class="ti ti-chart-bar"></i>Gestor
+  </button>
+  <button class="nav-btn" onclick="navProtected('tv',this)">
+    <i class="ti ti-device-tv"></i>TV Oficina
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     TELA DO TÉCNICO
+════════════════════════════════════════ -->
+<div id="screen-tecnico" class="screen active">
+
+  <div class="page-header">
+    <div>
+      <h1>Checklist de kart</h1>
+      <p id="tec-date">Nipo Import</p>
+    </div>
+  </div>
+
+  <div class="progress-bar">
+    <div class="prog-dot active" id="pd1">1</div>
+    <div class="prog-line"></div>
+    <div class="prog-dot" id="pd2">2</div>
+    <div class="prog-line"></div>
+    <div class="prog-dot" id="pd3">3</div>
+    <span class="prog-lbl" id="prog-lbl">Identificação</span>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step active" id="tec-step1">
+    <div class="sec-label">Selecione o técnico</div>
+    <div class="card-pad" style="padding-top:0">
+      <div class="tec-grid" id="tec-grid"></div>
+    </div>
+
+    <div class="sec-label">Número do kart</div>
+    <div class="card-pad" style="padding-top:0">
+      <div class="kart-grid" id="kart-grid-tec"></div>
+    </div>
+    <div class="hint">Vermelho = em manutenção · Verde = já inspecionado hoje</div>
+
+    <div style="padding:8px 16px 4px">
+      <button class="emerg-btn" onclick="openEmergModal()">
+        <i class="ti ti-alert-triangle" style="font-size:18px"></i>
+        Kart quebrou em pista — emergência
+      </button>
+    </div>
+    <div class="hint">Use apenas quando o kart parar durante a corrida</div>
+
+    <div class="nav-row">
+      <button class="btn-pri" id="tec-btn1" onclick="tecGoStep(2)" disabled>Próximo</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step" id="tec-step2">
+    <div class="sec-label" id="step2-title">Inspeção — Kart #--</div>
+    <div class="card-pad" style="margin:0 16px;background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius)">
+      <div id="check-list"></div>
+    </div>
+
+    <div class="sec-label" style="margin-top:8px">Observações (opcional)</div>
+    <div style="padding:0 16px">
+      <textarea id="obs-input" rows="2" placeholder="Descreva detalhes sobre os problemas encontrados..."></textarea>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-sec" onclick="tecGoStep(1)">Voltar</button>
+      <button class="btn-pri" id="tec-btn2" onclick="tecGoStep(3)" disabled>Revisar</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step" id="tec-step3">
+    <div class="sec-label">Confirme antes de enviar</div>
+    <div style="margin:0 16px">
+      <div class="sum-card" id="tec-resumo"></div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-sec" onclick="tecGoStep(2)">Editar</button>
+      <button class="btn-pri" onclick="tecEnviar()">
+        <i class="ti ti-send" style="font-size:14px"></i> Enviar
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 4: sucesso -->
+  <div class="step" id="tec-step4">
+    <div class="success-wrap">
+      <div class="success-icon"><i class="ti ti-check"></i></div>
+      <div class="success-title">Checklist enviado!</div>
+      <div class="success-sub" id="tec-success-msg">Registrado com sucesso.</div>
+      <div class="sum-card" id="tec-success-sum"></div>
+      <button class="btn-full" onclick="tecReset()">Inspecionar outro kart</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EMERGÊNCIA -->
+<div class="modal-overlay" id="emerg-modal">
+  <div class="modal">
+    <div class="modal-title"><i class="ti ti-alert-triangle" style="font-size:16px;margin-right:6px"></i>Kart parado em pista</div>
+    <div class="modal-sub">O kart será enviado imediatamente para a oficina.</div>
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:6px">Número do kart</div>
+      <div class="kart-grid" id="kart-grid-emerg"></div>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:6px">Técnico/operador</div>
+      <select id="emerg-tec">
+        <option value="">Selecionar...</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:6px">O que aconteceu?</div>
+      <textarea id="emerg-obs" rows="2" placeholder="Ex: motor apagou na curva 3, freio falhou..."></textarea>
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button class="btn-sec" style="flex:1" onclick="closeEmergModal()">Cancelar</button>
+      <button class="btn-pri" style="flex:2;background:var(--red);border:none" id="emerg-confirm-btn" onclick="confirmarEmerg()" disabled>
+        <i class="ti ti-alert-triangle" style="font-size:14px"></i> Enviar para oficina
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     TELA DE SENHA — GESTOR
+════════════════════════════════════════ -->
+<div id="lock-gestor" class="lock-screen">
+  <div class="lock-box">
+    <div class="lock-icon"><i class="ti ti-lock"></i></div>
+    <div class="lock-title">Acesso do gestor</div>
+    <div class="lock-sub">Digite o PIN para continuar</div>
+    <div class="pin-dots" id="dots-gestor">
+      <div class="pin-dot"></div><div class="pin-dot"></div>
+      <div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinKey('gestor','1')">1</button>
+      <button class="pin-key" onclick="pinKey('gestor','2')">2</button>
+      <button class="pin-key" onclick="pinKey('gestor','3')">3</button>
+      <button class="pin-key" onclick="pinKey('gestor','4')">4</button>
+      <button class="pin-key" onclick="pinKey('gestor','5')">5</button>
+      <button class="pin-key" onclick="pinKey('gestor','6')">6</button>
+      <button class="pin-key" onclick="pinKey('gestor','7')">7</button>
+      <button class="pin-key" onclick="pinKey('gestor','8')">8</button>
+      <button class="pin-key" onclick="pinKey('gestor','9')">9</button>
+      <button class="pin-key del" onclick="pinDel('gestor')"><i class="ti ti-backspace"></i></button>
+      <button class="pin-key" onclick="pinKey('gestor','0')">0</button>
+      <button class="pin-key del" style="color:var(--red-text)" onclick="pinCancel('gestor')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="lock-err" id="err-gestor"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TELA DO GESTOR
+════════════════════════════════════════ -->
+<div id="screen-gestor" class="screen">
+
+  <div class="page-header">
+    <div>
+      <h1>Revisão do dia</h1>
+      <p id="gest-date">Nipo Import</p>
+    </div>
+    <div style="font-size:11px;color:var(--text-ter);text-align:right">Gestor</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-n" id="g-pend" style="color:var(--amber)">0</div>
+      <div class="stat-l">Pendentes</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n" id="g-aprov" style="color:var(--green)">0</div>
+      <div class="stat-l">Aprovados</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n" id="g-emerg" style="color:var(--red)">0</div>
+      <div class="stat-l">Emergências</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n" id="g-conc" style="color:var(--blue)">0</div>
+      <div class="stat-l">Concluídos</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <button class="f-btn" onclick="setFiltro('todos',this)">Todos</button>
+    <button class="f-btn active" onclick="setFiltro('pendente',this)">Pendentes</button>
+    <button class="f-btn" onclick="setFiltro('emergencia',this)">Emergências</button>
+    <button class="f-btn" onclick="setFiltro('aprovado',this)">Na oficina</button>
+    <button class="f-btn" onclick="setFiltro('concluido',this)">Concluídos</button>
+    <button class="f-btn" onclick="setFiltro('dispensado',this)">Dispensados</button>
+  </div>
+
+  <div class="sec-label" id="g-sec-label">Karts aguardando decisão</div>
+  <div id="g-lista"></div>
+
+  <div class="confirm-bar">
+    <button class="btn-full" id="g-confirmar-btn" onclick="gestConfirmar()" disabled>
+      Enviar aprovados para a oficina
+    </button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     TELA DE SENHA — TV
+════════════════════════════════════════ -->
+<div id="lock-tv" class="lock-screen">
+  <div class="lock-box">
+    <div class="lock-icon"><i class="ti ti-device-tv"></i></div>
+    <div class="lock-title">TV da oficina</div>
+    <div class="lock-sub">Digite o PIN para continuar</div>
+    <div class="pin-dots" id="dots-tv">
+      <div class="pin-dot"></div><div class="pin-dot"></div>
+      <div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinKey('tv','1')">1</button>
+      <button class="pin-key" onclick="pinKey('tv','2')">2</button>
+      <button class="pin-key" onclick="pinKey('tv','3')">3</button>
+      <button class="pin-key" onclick="pinKey('tv','4')">4</button>
+      <button class="pin-key" onclick="pinKey('tv','5')">5</button>
+      <button class="pin-key" onclick="pinKey('tv','6')">6</button>
+      <button class="pin-key" onclick="pinKey('tv','7')">7</button>
+      <button class="pin-key" onclick="pinKey('tv','8')">8</button>
+      <button class="pin-key" onclick="pinKey('tv','9')">9</button>
+      <button class="pin-key del" onclick="pinDel('tv')"><i class="ti ti-backspace"></i></button>
+      <button class="pin-key" onclick="pinKey('tv','0')">0</button>
+      <button class="pin-key del" style="color:var(--red-text)" onclick="pinCancel('tv')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="lock-err" id="err-tv"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TV DA OFICINA
+════════════════════════════════════════ -->
+<div id="screen-tv" class="screen">
+  <div class="tv-header">
+    <div>
+      <div class="tv-title"><i class="ti ti-flag-2" style="font-size:18px;margin-right:8px"></i>Painel de manutenção</div>
+      <div class="tv-sub"><span class="tv-dot"></span><span id="tv-date-lbl">Nipo Import</span></div>
+    </div>
+    <div class="tv-clock" id="tv-clock">--:--</div>
+  </div>
+
+  <div class="tv-stats">
+    <div class="tv-stat">
+      <div class="tv-stat-n" id="tv-aguard" style="color:#f09595">0</div>
+      <div class="tv-stat-l">Aguardando manutenção</div>
+    </div>
+    <div class="tv-stat">
+      <div class="tv-stat-n" id="tv-emerg-cnt" style="color:#f09595">0</div>
+      <div class="tv-stat-l">Emergências</div>
+    </div>
+    <div class="tv-stat">
+      <div class="tv-stat-n" id="tv-conc-cnt" style="color:#9FE1CB">0</div>
+      <div class="tv-stat-l">Concluídos hoje</div>
+    </div>
+  </div>
+
+  <div class="tv-grid" id="tv-grid"></div>
+  <div class="tv-footer" id="tv-footer">Atualizado automaticamente · Nipo Import</div>
+</div>
+
+
+<script>
+// ──────────────────────────────────────────────
+// DADOS GLOBAIS
+// ──────────────────────────────────────────────
+const ITENS = ['Chassi','Freios','Motor','Mangueiras de combustível','Pedais','Assento','Pneus','Volante','Corrente/transmissão','Carenagem'];
+const TECNICOS = ['Carlos','Ricardo','Fábio','Diego','Marcos','Ana'];
+const NUM_KARTS = 40;
+
+// ── COLE AQUI A URL DO SEU APPS SCRIPT APÓS PUBLICAR ──
+const API_URL = 'COLE_AQUI_A_URL_DO_APPS_SCRIPT';
+
+// PINs — altere aqui para personalizar
+const PINS = { gestor: '1234', tv: '5678' };
+
+// Cache local — sincronizado com o servidor a cada 30s
+let registros = [];
+const sessaoDesbloqueada = { gestor: false, tv: false };
+let sincronizando = false;
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function horaStr() { return new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}); }
+function dataFormatada() { return new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long', year:'numeric'}); }
+
+// ── CHAMADA AO SERVIDOR (XMLHttpRequest lida melhor com redirects do Apps Script) ──
+function chamarAPI(url) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onload = () => {
+      try { resolve(JSON.parse(xhr.responseText)); }
+      catch(e) { reject(e); }
+    };
+    xhr.onerror = () => reject(new Error('Erro de rede'));
+    xhr.send();
+  });
+}
+
+// ── SINCRONIZAÇÃO COM O SERVIDOR ──────────────────────
+async function sincronizar() {
+  if (sincronizando) return;
+  sincronizando = true;
+  try {
+    const json = await chamarAPI(API_URL + '?acao=buscar');
+    if (json.ok) {
+      registros = json.registros || [];
+      buildKartGridTec();
+      if (document.getElementById('screen-gestor').classList.contains('active')) renderGestor();
+      if (document.getElementById('screen-tv').classList.contains('active')) renderTV();
+    }
+  } catch(e) {
+    console.warn('Erro ao sincronizar:', e);
+  }
+  sincronizando = false;
+}
+
+// ── ENVIAR DADOS AO SERVIDOR ──────────────────────────
+async function api(acao, dados) {
+  const payload = btoa(unescape(encodeURIComponent(JSON.stringify(dados))));
+  const url = API_URL + '?acao=' + acao + '&d=' + encodeURIComponent(payload);
+  return await chamarAPI(url);
+}
+
+// ── HELPERS DE ESTADO LOCAL ───────────────────────────
+function kartsEmManutencao() {
+  return registros
+    .filter(r => r.data === todayStr() && (r.status === 'aprovado' || r.tipo === 'emergencia') && r.status !== 'concluido')
+    .map(r => r.kart);
+}
+
+function kartsJaInspecionados() {
+  return registros
+    .filter(r => r.data === todayStr() && r.tipo === 'checklist')
+    .map(r => r.kart);
+}
+
+// Indicador de conexão no topo
+function mostrarStatus(msg, tipo) {
+  let bar = document.getElementById('sync-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'sync-bar';
+    bar.style.cssText = 'position:fixed;top:49px;left:0;right:0;z-index:200;text-align:center;font-size:12px;font-weight:500;padding:6px;transition:opacity .3s';
+    document.body.appendChild(bar);
+  }
+  bar.textContent = msg;
+  bar.style.background = tipo === 'ok' ? '#EAF3DE' : tipo === 'erro' ? '#FAECE7' : '#FAEEDA';
+  bar.style.color = tipo === 'ok' ? '#27500A' : tipo === 'erro' ? '#711713' : '#633806';
+  bar.style.opacity = '1';
+  if (tipo === 'ok') setTimeout(() => bar.style.opacity = '0', 2000);
+}
+
+// ──────────────────────────────────────────────
+// PIN / LOCK
+// ──────────────────────────────────────────────
+const pinBuffer = { gestor: '', tv: '' };
+
+function navProtected(tela, btn) {
+  if (sessaoDesbloqueada[tela]) {
+    showScreen(tela, btn);
+    return;
+  }
+  // Guarda o botão para ativar depois do unlock
+  pinBuffer[tela] = '';
+  updateDots(tela);
+  document.getElementById('err-' + tela).textContent = '';
+  // Esconde tudo e mostra a tela de lock
+  document.querySelectorAll('.screen, .lock-screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('lock-' + tela).classList.add('active');
+  btn.classList.add('active');
+  // Salva referência ao btn para usar depois
+  window._pendingNavBtn = btn;
+  window._pendingNavTela = tela;
+}
+
+function pinKey(tela, digit) {
+  if (pinBuffer[tela].length >= 4) return;
+  pinBuffer[tela] += digit;
+  updateDots(tela);
+  if (pinBuffer[tela].length === 4) {
+    setTimeout(() => checkPin(tela), 120);
+  }
+}
+
+function pinDel(tela) {
+  pinBuffer[tela] = pinBuffer[tela].slice(0, -1);
+  updateDots(tela);
+  document.getElementById('err-' + tela).textContent = '';
+}
+
+function pinCancel(tela) {
+  pinBuffer[tela] = '';
+  updateDots(tela);
+  // Volta para técnico
+  document.querySelectorAll('.screen, .lock-screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-tecnico').classList.add('active');
+  document.querySelector('.nav-btn').classList.add('active');
+}
+
+function checkPin(tela) {
+  if (pinBuffer[tela] === PINS[tela]) {
+    sessaoDesbloqueada[tela] = true;
+    document.getElementById('lock-' + tela).classList.remove('active');
+    showScreen(tela, window._pendingNavBtn);
+  } else {
+    // Erro: pisca os dots em vermelho
+    const dots = document.querySelectorAll('#dots-' + tela + ' .pin-dot');
+    dots.forEach(d => d.classList.add('error'));
+    document.getElementById('err-' + tela).textContent = 'PIN incorreto. Tente novamente.';
+    setTimeout(() => {
+      dots.forEach(d => { d.classList.remove('error', 'filled'); });
+      pinBuffer[tela] = '';
+      document.getElementById('err-' + tela).textContent = '';
+    }, 800);
+  }
+}
+
+function updateDots(tela) {
+  const dots = document.querySelectorAll('#dots-' + tela + ' .pin-dot');
+  dots.forEach((d, i) => {
+    d.classList.remove('error');
+    d.classList.toggle('filled', i < pinBuffer[tela].length);
+  });
+}
+
+// ──────────────────────────────────────────────
+// NAV
+// ──────────────────────────────────────────────
+function showScreen(name, btn) {
+  document.querySelectorAll('.screen, .lock-screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'gestor') renderGestor();
+  if (name === 'tv') renderTV();
+}
+
+// ──────────────────────────────────────────────
+// TELA TÉCNICO
+// ──────────────────────────────────────────────
+let selTec = null, selKart = null, estados = {};
+
+function buildTecGrid() {
+  document.getElementById('tec-date').textContent = 'Nipo Import · ' + dataFormatada();
+  document.getElementById('tec-grid').innerHTML = TECNICOS.map(t =>
+    `<button class="tec-btn" onclick="selTecnico('${t}',this)">
+      <div class="tec-ini">${t.slice(0,2).toUpperCase()}</div>${t}
+    </button>`
+  ).join('');
+  const sel = document.getElementById('emerg-tec');
+  sel.innerHTML = '<option value="">Selecionar...</option>' + TECNICOS.map(t => `<option>${t}</option>`).join('');
+  buildKartGridTec();
+}
+
+function buildKartGridTec() {
+  const emManut = kartsEmManutencao();
+  const jaInsp = kartsJaInspecionados();
+  const g = document.getElementById('kart-grid-tec');
+  g.innerHTML = '';
+  for (let i = 1; i <= NUM_KARTS; i++) {
+    const btn = document.createElement('button');
+    const emM = emManut.includes(i);
+    const jaI = jaInsp.includes(i) && !emM;
+    if (emM) {
+      btn.className = 'kart-btn em-manutencao';
+      btn.title = 'Em manutenção';
+      btn.disabled = true;
+    } else if (jaI) {
+      btn.className = 'kart-btn inspecionado';
+      btn.title = 'Já inspecionado hoje';
+      btn.disabled = true;
+    } else {
+      btn.className = 'kart-btn';
+      btn.onclick = () => selKartNum(i, btn);
+    }
+    btn.textContent = '#' + String(i).padStart(2,'0');
+    g.appendChild(btn);
+  }
+}
+
+function selTecnico(t, btn) {
+  selTec = t;
+  document.querySelectorAll('.tec-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  checkStep1();
+}
+
+function selKartNum(n, btn) {
+  selKart = n;
+  document.querySelectorAll('#kart-grid-tec .kart-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  checkStep1();
+}
+
+function checkStep1() {
+  document.getElementById('tec-btn1').disabled = !(selTec && selKart);
+}
+
+function buildCheckList() {
+  ITENS.forEach(i => estados[i] = null);
+  document.getElementById('step2-title').textContent = 'Inspeção — Kart #' + String(selKart).padStart(2,'00');
+  document.getElementById('check-list').innerHTML = ITENS.map(item => `
+    <div class="check-item">
+      <span>${item}</span>
+      <div class="tog-grp">
+        <button class="tog" onclick="setEstado('${item}','ok',this)">
+          <i class="ti ti-check" style="font-size:12px"></i> Ok
+        </button>
+        <button class="tog" onclick="setEstado('${item}','rev',this)">
+          <i class="ti ti-alert-triangle" style="font-size:12px"></i> Revisão
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+function setEstado(item, val, btn) {
+  estados[item] = val;
+  btn.closest('.tog-grp').querySelectorAll('.tog').forEach(b => b.classList.remove('ok','rev'));
+  btn.classList.add(val);
+  document.getElementById('tec-btn2').disabled = !ITENS.every(i => estados[i] !== null);
+}
+
+function buildTecResumo(id) {
+  const rev = ITENS.filter(i => estados[i] === 'rev');
+  const obs = document.getElementById('obs-input').value.trim();
+  document.getElementById(id).innerHTML = `
+    <div class="sum-row"><span class="sum-lbl">Kart</span><span>Kart #${String(selKart).padStart(2,'00')}</span></div>
+    <div class="sum-row"><span class="sum-lbl">Técnico</span><span>${selTec}</span></div>
+    <div class="sum-row"><span class="sum-lbl">Itens ok</span><span style="color:var(--green-text);font-weight:500">${ITENS.length - rev.length}/${ITENS.length}</span></div>
+    <div class="sum-row"><span class="sum-lbl">Com revisão</span><span style="color:${rev.length?'var(--red-text)':'var(--green-text)'};font-weight:500">${rev.length ? rev.join(', ') : 'Nenhum'}</span></div>
+    ${obs ? `<div class="sum-row" style="flex-direction:column;gap:3px"><span class="sum-lbl">Obs.</span><span style="font-size:12px;font-style:italic">"${obs}"</span></div>` : ''}`;
+}
+
+function tecGoStep(n) {
+  if (n === 2) buildCheckList();
+  if (n === 3) buildTecResumo('tec-resumo');
+  document.querySelectorAll('#screen-tecnico .step').forEach(s => s.classList.remove('active'));
+  document.getElementById('tec-step' + n).classList.add('active');
+  updateProg(n);
+}
+
+function updateProg(n) {
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('pd' + i);
+    el.className = 'prog-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+    el.innerHTML = i < n ? '<i class="ti ti-check" style="font-size:11px"></i>' : i;
+  });
+  const labels = ['','Identificação','Inspeção','Revisão'];
+  document.getElementById('prog-lbl').textContent = labels[n] || '';
+}
+
+async function tecEnviar() {
+  const rev = ITENS.filter(i => estados[i] === 'rev');
+  const obs = document.getElementById('obs-input').value.trim();
+  const payload = {
+    kart: selKart, tecnico: selTec,
+    estados: {...estados}, itens_revisao: rev, obs,
+    tipo: 'checklist', status: rev.length > 0 ? 'pendente' : 'ok'
+  };
+
+  mostrarStatus('Enviando...', 'sync');
+  try {
+    const r = await api('salvar_checklist', payload);
+    if (r.ok) {
+      mostrarStatus('Checklist enviado!', 'ok');
+      await sincronizar();
+      buildKartGridTec();
+    } else {
+      mostrarStatus('Erro ao enviar. Tente novamente.', 'erro');
+      return;
+    }
+  } catch(e) {
+    mostrarStatus('Sem conexão. Verifique o internet.', 'erro');
+    return;
+  }
+
+  // Atualiza resumo e avança para tela de sucesso
+  buildTecResumo('tec-success-sum');
+  document.getElementById('tec-success-msg').textContent = rev.length
+    ? `Kart #${String(selKart).padStart(2,'00')} registrado com ${rev.length} item(s) para revisão.`
+    : `Kart #${String(selKart).padStart(2,'00')} registrado — tudo ok!`;
+  document.querySelectorAll('#screen-tecnico .step').forEach(s => s.classList.remove('active'));
+  document.getElementById('tec-step4').classList.add('active');
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('pd' + i);
+    el.className = 'prog-dot done';
+    el.innerHTML = '<i class="ti ti-check" style="font-size:11px"></i>';
+  });
+  document.getElementById('prog-lbl').textContent = 'Enviado';
+}
+
+function tecReset() {
+  selTec = null; selKart = null; estados = {};
+  document.getElementById('obs-input').value = '';
+  document.getElementById('tec-btn1').disabled = true;
+  document.getElementById('tec-btn2').disabled = true;
+  document.querySelectorAll('.tec-btn').forEach(b => b.classList.remove('sel'));
+  buildKartGridTec();
+  tecGoStep(1);
+  sincronizar();
+}
+
+// ──────────────────────────────────────────────
+// EMERGÊNCIA
+// ──────────────────────────────────────────────
+let emergKart = null;
+
+function openEmergModal() {
+  emergKart = null;
+  document.getElementById('emerg-obs').value = '';
+  document.getElementById('emerg-tec').value = '';
+  document.getElementById('emerg-confirm-btn').disabled = true;
+  const emManut = kartsEmManutencao();
+  const jaInsp = kartsJaInspecionados();
+  const g = document.getElementById('kart-grid-emerg');
+  g.innerHTML = '';
+  for (let i = 1; i <= NUM_KARTS; i++) {
+    const btn = document.createElement('button');
+    const bloqueado = emManut.includes(i) || jaInsp.includes(i);
+    btn.className = 'kart-btn' + (bloqueado ? ' em-manutencao' : '');
+    btn.textContent = '#' + String(i).padStart(2,'00');
+    btn.disabled = bloqueado;
+    if (!bloqueado) btn.onclick = () => {
+      emergKart = i;
+      document.querySelectorAll('#kart-grid-emerg .kart-btn').forEach(b => b.classList.remove('sel'));
+      btn.classList.add('sel');
+      checkEmerg();
+    };
+    g.appendChild(btn);
+  }
+  document.getElementById('emerg-modal').classList.add('open');
+}
+
+function closeEmergModal() {
+  document.getElementById('emerg-modal').classList.remove('open');
+  emergKart = null;
+}
+
+function checkEmerg() {
+  document.getElementById('emerg-confirm-btn').disabled = !(emergKart && document.getElementById('emerg-tec').value);
+}
+document.getElementById('emerg-tec').addEventListener('change', checkEmerg);
+
+async function confirmarEmerg() {
+  const tec = document.getElementById('emerg-tec').value;
+  const obs = document.getElementById('emerg-obs').value.trim();
+  mostrarStatus('Enviando emergência...', 'sync');
+  try {
+    const r = await api('salvar_emergencia', {
+      kart: emergKart, tecnico: tec,
+      obs: obs || 'Kart parou durante corrida.'
+    });
+    if (r.ok) {
+      mostrarStatus('Emergência registrada!', 'ok');
+      await sincronizar();
+    } else {
+      mostrarStatus('Erro ao registrar. Tente novamente.', 'erro');
+      return;
+    }
+  } catch(e) {
+    mostrarStatus('Sem conexão.', 'erro');
+    return;
+  }
+  closeEmergModal();
+  buildKartGridTec();
+  alert(`Kart #${String(emergKart).padStart(2,'00')} enviado para a oficina.`);
+}
+
+// ──────────────────────────────────────────────
+// GESTOR
+// ──────────────────────────────────────────────
+let filtroGestor = 'pendente';
+
+function setFiltro(f, btn) {
+  filtroGestor = f;
+  document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGestor();
+}
+
+function renderGestor() {
+  document.getElementById('gest-date').textContent = 'Nipo Import · ' + dataFormatada();
+  const hoje = registros.filter(r => r.data === todayStr() && (r.itens_revisao?.length > 0 || r.tipo === 'emergencia'));
+  const pend = hoje.filter(r => r.status === 'pendente').length;
+  const aprov = hoje.filter(r => r.status === 'aprovado' && r.tipo !== 'emergencia').length;
+  const emerg = hoje.filter(r => r.tipo === 'emergencia' && r.status !== 'concluido').length;
+  const conc = hoje.filter(r => r.status === 'concluido').length;
+
+  document.getElementById('g-pend').textContent = pend;
+  document.getElementById('g-aprov').textContent = aprov;
+  document.getElementById('g-emerg').textContent = emerg;
+  document.getElementById('g-conc').textContent = conc;
+  document.getElementById('g-confirmar-btn').disabled = aprov === 0;
+
+  let lista = hoje;
+  if (filtroGestor === 'pendente') lista = hoje.filter(r => r.status === 'pendente');
+  else if (filtroGestor === 'aprovado') lista = hoje.filter(r => r.status === 'aprovado');
+  else if (filtroGestor === 'emergencia') lista = hoje.filter(r => r.tipo === 'emergencia' && r.status !== 'concluido');
+  else if (filtroGestor === 'concluido') lista = hoje.filter(r => r.status === 'concluido');
+  else if (filtroGestor === 'dispensado') lista = hoje.filter(r => r.status === 'dispensado');
+
+  const labels = {
+    todos: `${hoje.length} registros com atenção`,
+    pendente: `${pend} pendentes de decisão`,
+    emergencia: `${emerg} emergências em aberto`,
+    aprovado: `${aprov} aprovados — na oficina`,
+    concluido: `${conc} concluídos hoje`,
+    dispensado: `${hoje.filter(r=>r.status==='dispensado').length} dispensados`
+  };
+  document.getElementById('g-sec-label').textContent = labels[filtroGestor] || '';
+
+  if (!lista.length) {
+    document.getElementById('g-lista').innerHTML = '<div class="empty">Nenhum registro nesta categoria.</div>';
+    return;
+  }
+
+  document.getElementById('g-lista').innerHTML = lista.map((r, idx) => {
+    const rid = 'r_' + idx;
+    _recMap[rid] = r;
+    const isEmerg = r.tipo === 'emergencia';
+    const isConc = r.status === 'concluido';
+    const isAprov = r.status === 'aprovado' && !isEmerg;
+    const isPend = r.status === 'pendente';
+
+    const badge = isConc
+      ? `<span class="badge badge-conc"><i class="ti ti-check" style="font-size:10px"></i> Concluído</span>`
+      : isEmerg ? `<span class="badge badge-emerg"><i class="ti ti-alert-triangle" style="font-size:10px"></i> Emergência</span>`
+      : isAprov ? `<span class="badge badge-aprov"><i class="ti ti-check" style="font-size:10px"></i> Aprovado</span>`
+      : `<span class="badge badge-pend">Pendente</span>`;
+
+    const emergStrip = isEmerg && !isConc
+      ? `<div class="emerg-strip"><i class="ti ti-alert-triangle" style="font-size:12px"></i> Parou durante corrida — na oficina agora</div>` : '';
+
+    const acoes = isConc ? ''
+      : (isEmerg || isAprov)
+        ? `<div class="kart-actions" style="grid-template-columns:1fr">
+            <button class="act-btn concluir" onclick="gestConcluir('${rid}')"><i class="ti ti-check" style="font-size:14px"></i> Concluir manutenção</button>
+          </div>`
+        : `<div class="kart-actions">
+            <button class="act-btn aprovar ${isPend?'':'disabled'}" onclick="${isPend?`gestAprovar('${rid}')`:''}">
+              <i class="ti ti-tool" style="font-size:14px"></i>Enviar p/ oficina
+            </button>
+            <button class="act-btn dispensar ${isPend?'':'disabled'}" onclick="${isPend?`gestDispensar('${rid}')`:''}">
+              <i class="ti ti-x" style="font-size:14px"></i>Dispensar
+            </button>
+          </div>`;
+
+    return `<div class="kart-card ${isEmerg&&!isConc?'emerg':''} ${isConc?'concluido':''}">
+      ${emergStrip}
+      <div class="kart-top">
+        <div>
+          <div class="kart-num">Kart #${String(r.kart).padStart(2,'00')}</div>
+          <div class="kart-meta"><i class="ti ti-user" style="font-size:11px;margin-right:3px"></i>${r.tecnico} · ${r.hora}</div>
+        </div>
+        ${badge}
+      </div>
+      <div class="item-tags">${(r.itens_revisao||[]).map(i=>`<span class="item-tag"><i class="ti ti-alert-triangle" style="font-size:10px"></i>${i}</span>`).join('')}</div>
+      ${r.obs?`<div class="obs-txt">"${r.obs}"</div>`:''}
+      ${acoes}
+    </div>`;
+  }).join('');
+}
+
+async function gestAprovar(id) {
+  const r = registros.find(r => r.id === id || (r.kart == id));
+  // Find by position in list instead
+  const item = registros.find((rec, idx) => {
+    const el = document.querySelector(`[data-rid="${id}"]`);
+    return el && rec.kart == el.dataset.kart && rec.tipo == el.dataset.tipo;
+  });
+  // Simpler: find the record displayed with this rendered id
+  const rec = _findRec(id);
+  if (!rec) return;
+  const novoStatus = rec.status === 'aprovado' ? 'pendente' : 'aprovado';
+  mostrarStatus('Atualizando...', 'sync');
+  try {
+    const r = await api('atualizar_status', { kart: rec.kart, tipo: rec.tipo, novo_status: novoStatus });
+    if (r.ok) { mostrarStatus('Atualizado!', 'ok'); rec.status = novoStatus; renderGestor(); renderTV(); }
+    else { mostrarStatus('Erro: ' + (r.msg||'tente novamente'), 'erro'); }
+  } catch(e) { mostrarStatus('Erro ao atualizar.', 'erro'); }
+}
+
+async function gestDispensar(id) {
+  const rec = _findRec(id);
+  if (!rec) return;
+  mostrarStatus('Atualizando...', 'sync');
+  try {
+    const r = await api('atualizar_status', { kart: rec.kart, tipo: rec.tipo, novo_status: 'dispensado' });
+    if (r.ok) { mostrarStatus('Dispensado!', 'ok'); rec.status = 'dispensado'; renderGestor(); renderTV(); }
+    else { mostrarStatus('Erro: ' + (r.msg||'tente novamente'), 'erro'); }
+  } catch(e) { mostrarStatus('Erro ao dispensar.', 'erro'); }
+}
+
+async function gestConcluir(id) {
+  const rec = _findRec(id);
+  if (!rec) return;
+  if (!confirm(`Confirmar conclusão da manutenção do Kart #${String(rec.kart).padStart(2,'00')}?`)) return;
+  mostrarStatus('Concluindo...', 'sync');
+  try {
+    const r = await api('atualizar_status', { kart: rec.kart, tipo: rec.tipo, novo_status: 'concluido' });
+    if (r.ok) { mostrarStatus('Manutenção concluída!', 'ok'); rec.status = 'concluido'; renderGestor(); renderTV(); buildKartGridTec(); }
+    else { mostrarStatus('Erro: ' + (r.msg||'tente novamente'), 'erro'); }
+  } catch(e) { mostrarStatus('Erro ao concluir.', 'erro'); }
+}
+
+// helper: mapeia id renderizado para o registro
+const _recMap = {};
+function _findRec(id) { return _recMap[id]; }
+
+function gestConfirmar() {
+  const aprovados = registros.filter(r => r.data === todayStr() && r.status === 'aprovado' && r.tipo !== 'emergencia');
+  if (!aprovados.length) return;
+  alert('Enviado para a TV da oficina:\n' + aprovados.map(r => 'Kart #' + String(r.kart).padStart(2,'00')).join(', '));
+  renderTV();
+}
+
+// ──────────────────────────────────────────────
+// TV DA OFICINA
+// ──────────────────────────────────────────────
+function renderTV() {
+  const hoje = registros.filter(r => r.data === todayStr());
+  const ativos = hoje.filter(r => (r.status === 'aprovado' || r.tipo === 'emergencia') && r.status !== 'concluido');
+  const emerg = ativos.filter(r => r.tipo === 'emergencia');
+  const conc = hoje.filter(r => r.status === 'concluido');
+
+  document.getElementById('tv-aguard').textContent = ativos.length;
+  document.getElementById('tv-emerg-cnt').textContent = emerg.length;
+  document.getElementById('tv-conc-cnt').textContent = conc.length;
+  document.getElementById('tv-date-lbl').textContent = 'Atualizado automaticamente · ' + dataFormatada();
+
+  if (!ativos.length) {
+    document.getElementById('tv-grid').innerHTML = '';
+    document.getElementById('tv-footer').innerHTML = '<span style="color:rgba(255,255,255,.35)"><i class="ti ti-check" style="font-size:14px;margin-right:6px;vertical-align:-2px"></i>Nenhum kart aguardando manutenção agora</span>';
+    return;
+  }
+  const ordenados = [...ativos].sort((a,b) => (b.tipo==='emergencia'?1:0)-(a.tipo==='emergencia'?1:0));
+  document.getElementById('tv-grid').innerHTML = ordenados.map(r => {
+    const isEmerg = r.tipo === 'emergencia';
+    return `<div class="tv-card ${isEmerg?'emerg':''}">
+      <div class="tv-card-header">
+        <div>
+          <div class="tv-kart-num">Kart #${String(r.kart).padStart(2,'00')}</div>
+          <div class="tv-kart-meta">${r.tecnico} · ${r.hora}</div>
+        </div>
+        <span class="tv-badge ${isEmerg?'tv-badge-emerg':'tv-badge-normal'}">${isEmerg?'Emergência':'Manutenção'}</span>
+      </div>
+      <div class="tv-items">${(r.itens_revisao||[]).map(i=>`<span class="tv-item">${i}</span>`).join('')}</div>
+      ${r.obs?`<div class="tv-obs">"${r.obs}"</div>`:''}
+    </div>`;
+  }).join('');
+  document.getElementById('tv-footer').textContent = 'Atualiza a cada 5 min · Nipo Import';
+}
+
+// ──────────────────────────────────────────────
+// CLOCK + INIT
+// ──────────────────────────────────────────────
+function tick() {
+  document.getElementById('tv-clock').textContent =
+    new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}
+tick();
+setInterval(tick, 1000);
+setInterval(sincronizar, 30000);
+
+buildTecGrid();
+sincronizar();
+</script>
+
+</body>
+</html>
