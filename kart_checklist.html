@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CHECKLIST V11 — EDUARDO NEVES</title>
+<title>CHECKLIST K1 — EDUARDO NEVES</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
   :root {
@@ -244,7 +244,7 @@
   <div class="page-header">
     <div>
       <h1>Checklist de kart</h1>
-      <p id="tec-date">V11</p>
+      <p id="tec-date">K1</p>
     </div>
   </div>
 
@@ -414,7 +414,7 @@
   <div class="page-header">
     <div>
       <h1>Revisão do dia</h1>
-      <p id="gest-date">V11</p>
+      <p id="gest-date">K1</p>
     </div>
     <div style="font-size:11px;color:var(--text-ter);text-align:right">Gestor</div>
   </div>
@@ -495,7 +495,7 @@
   <div class="tv-header">
     <div>
       <div class="tv-title"><i class="ti ti-flag-2" style="font-size:18px;margin-right:8px"></i>Painel de manutenção</div>
-      <div class="tv-sub"><span class="tv-dot"></span><span id="tv-date-lbl">V11</span></div>
+      <div class="tv-sub"><span class="tv-dot"></span><span id="tv-date-lbl">K1</span></div>
     </div>
     <div class="tv-clock" id="tv-clock">--:--</div>
   </div>
@@ -516,7 +516,7 @@
   </div>
 
   <div class="tv-grid" id="tv-grid"></div>
-  <div class="tv-footer" id="tv-footer">Atualizado automaticamente · V11</div>
+  <div class="tv-footer" id="tv-footer">Atualizado automaticamente · K1</div>
 </div>
 
 
@@ -759,7 +759,7 @@ function removerFoto() {
 let selTec = null, selKart = null, estados = {};
 
 function buildTecGrid() {
-  document.getElementById('tec-date').textContent = 'V11 · ' + dataFormatada();
+  document.getElementById('tec-date').textContent = 'K1 · ' + dataFormatada();
   document.getElementById('tec-grid').innerHTML = TECNICOS.map(t =>
     `<button class="tec-btn" onclick="selTecnico('${t}',this)">
       <div class="tec-ini">${t.slice(0,2).toUpperCase()}</div>${t}
@@ -1005,7 +1005,7 @@ function setFiltro(f, btn) {
 }
 
 function renderGestor() {
-  document.getElementById('gest-date').textContent = 'V11 · ' + dataFormatada();
+  document.getElementById('gest-date').textContent = 'K1 · ' + dataFormatada();
 
   // Pendentes: só de hoje
   const pendentes = registros.filter(r => r.data === todayStr() && r.status === 'pendente' && (r.itens_revisao?.length > 0 || r.tipo === 'emergencia'));
@@ -1184,7 +1184,7 @@ function renderTV() {
       ${r.obs?`<div class="tv-obs">"${r.obs}"</div>`:''}
     </div>`;
   }).join('');
-  document.getElementById('tv-footer').textContent = 'Atualiza a cada 5 min · V11';
+  document.getElementById('tv-footer').textContent = 'Atualiza a cada 5 min · K1';
 }
 
 // ──────────────────────────────────────────────
